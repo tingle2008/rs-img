@@ -1,0 +1,35 @@
+#!/bin/sh 
+
+cd /export/crawlspace/os-image || exit 1
+if [[ $1 == "-v" ]]; then set -x; shift; fi
+
+NAME=$1
+NAME=`echo $1 | sed 's#/$##'`
+
+if [ "x$NAME" == "x" ]; then
+  echo Please specify what image to build
+  exit
+fi
+
+if [ ! -d $NAME ];  then
+  echo Directory $1 does not exist, can not create image
+fi
+
+DIR=`pwd`
+echo Processing dir $NAME 
+
+mkdir -p $DIR/disk.mnt.xfs
+umount $DIR/disk.mnt.xfs
+
+if [[ ! -e disk.img.xfs ]]; then
+    dd if=/dev/zero of=disk.img.xfs bs=1000k count=999
+    mkfs.xfs -f disk.img.xfs || exit 1
+fi
+
+mount -o loop -t xfs $DIR/disk.img.xfs $DIR/disk.mnt.xfs || exit 1
+rsync --delete -H -a $1/. disk.mnt.xfs/. || exit 1
+echo Ramdisk image generated `date`  >>disk.mnt.xfs/etc/motd || exit 1
+echo from `hostname`:$DIR >>disk.mnt.xfs/etc/motd || exit 1
+
+umount $DIR/disk.mnt.xfs || exit 1
+

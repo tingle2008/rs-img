@@ -1,0 +1,26 @@
+#!/bin/sh 
+
+NAME=$1
+NAME=`echo $1 | sed 's#/$##'`
+
+if [ "x$NAME" == "x" ]; then
+  echo Please specify what image to build
+  exit
+fi
+
+if [ ! -d $NAME ];  then
+  echo Directory $1 does not exist, can not create image
+fi
+
+rsync --delete -av -e ssh $NAME new-image-xfs new-image-ext2 kernel2:/export/crawlspace/os-image
+echo CREATING XFS IMAGE for $NAME
+ssh kernel2 /export/crawlspace/os-image/new-image-xfs $NAME 
+echo "COPYING XFS IMAGE (in the background)"
+ssh kernel2 "cd /export/crawlspace/os-image;bzip2 -c disk.img.xfs">/usr/local/jumpstart/out/tftpboot/$NAME-xfs.bz2 &
+echo CREATING EXT2 IMAGE for $NAME
+ssh kernel2 /export/crawlspace/os-image/new-image-ext2 $NAME 
+echo COPYING EXT2 IMAGE
+ssh kernel2 "cd /export/crawlspace/os-image;bzip2 -c disk.img.ext2">/usr/local/jumpstart/out/tftpboot/$NAME-ext2.bz2 
+wait
+~dmuino/t/l /usr/local/jumpstart/out/tftpboot/*.bz2
+echo "All done."

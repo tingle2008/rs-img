@@ -1,0 +1,36 @@
+#!/bin/sh 
+
+cd /export/crawlspace/os-image || exit 1
+if [[ $1 == "-v" ]]; then set -x; shift; fi
+
+NAME=$1
+NAME=`echo $1 | sed 's#/$##'`
+
+if [ "x$NAME" == "x" ]; then
+  echo Please specify what image to build
+  exit
+fi
+
+if [ ! -d $NAME ];  then
+  echo Directory $1 does not exist, can not create image
+fi
+
+DIR=`pwd`
+echo Processing dir $NAME 
+
+mkdir -p $DIR/disk.mnt.ext2
+umount $DIR/disk.mnt.ext2
+
+if [[ ! -e disk.img.ext2 ]]; then
+    dd if=/dev/zero of=disk.img.ext2 bs=1000k count=999 || exit 1
+    mke2fs -O "^filetype" -F disk.img.ext2 || exit 1
+fi
+
+mount -o loop -t ext2 $DIR/disk.img.ext2 $DIR/disk.mnt.ext2 || exit 1
+rsync --delete -H -a $1/. disk.mnt.ext2/. || exit 1
+echo Ramdisk image generated `date`  >>disk.mnt.ext2/etc/motd || exit 1
+echo from `hostname`:$DIR >>disk.mnt.ext2/etc/motd || exit 1
+
+umount $DIR/disk.mnt.ext2 || exit 1
+fsck -C -f -y $DIR/disk.img.ext2 # expected to return != 0, optimizing dirs...
+

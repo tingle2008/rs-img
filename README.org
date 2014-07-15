@@ -1,0 +1,13 @@
+rs-img
+======
+
+image maker workshop. (include inst-image and os-image) . 
+
+
+* inst image
+
+out put vmlinuz + initrd for jumpstart step 1 .  
+
+* os image
+
+

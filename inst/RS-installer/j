@@ -1,0 +1,75 @@
+#!/usr/bin/perl -w
+
+use strict;
+system("mount -t proc proc /proc");
+my $console = get_console();
+my $serial = get_serial();
+system("umount /proc");
+
+if (defined $serial) {
+    # Use this serial device
+    my $serial_dev = "ttyS$serial";
+
+    if ($console ne $serial_dev) {
+        open my $serial_fh, ">/dev/$serial_dev";
+        my $msg =  "\n\n\nWARNING: console said $console, but we detected $serial_dev\n" .
+            "Using $serial_dev instead!!!\n".
+            "=" x 70 . "\n\n\n";
+        print $msg;
+        print $serial_fh $msg;
+        close $serial_fh;
+        # Write to a file or something
+        open my $out, ">/jumpstart/overrides.txt";
+        print $out "serial-port=$serial\n";
+        close $out;
+        $console = $serial_dev;
+    }
+}
+
+close STDIN;
+close STDOUT;
+close STDERR;
+
+open STDIN, "</dev/$console" or die "$console: $!";
+open STDOUT, ">/dev/$console" or die "$console: $!";
+open STDERR, ">&STDOUT" or die "Can't dup STDOUT: $!";
+exec "/js" or do {
+    print "\n\nFAILED!!!\n";
+    system("/bin/bash");
+    exit 0;
+};
+
+sub get_serial {
+    open my $fh, "</proc/tty/driver/serial" or die "serial: $!";
+    my @lines = <$fh>;
+    close $fh;
+
+    my $serial = (grep { /DSR/ } @lines)[0];
+    return unless $serial;
+
+    if ($serial =~ /^(\d+):/) {
+        return $1;
+    } else {
+        return;
+    }
+}
+
+sub get_console {
+    open my $fh, "</proc/cmdline" or die "cmdline: $!";
+    my $cmdline = <$fh>;
+    close $fh;
+
+    my @console_fields = grep { /^console/ } split(' ', $cmdline);
+    return "console" unless @console_fields;
+    return parse_console($console_fields[-1]);
+}
+
+sub parse_console {
+    my $console = shift;
+    if ($console =~ /^console=([^,]+)/) {
+        return $1;
+    }
+
+    return "console";
+}
+

@@ -1,0 +1,42 @@
+#!/bin/sh 
+
+cd /usr/local/jumpstart/images/inst
+if [[ $# > 1 ]]; then
+    if [[ $1 == "-f" ]]; then FORCE=1; shift; fi
+fi
+
+NAME=$1
+NAME=`echo $1 | sed 's#/$##'`
+
+if [ "x$NAME" == "x" ]; then
+  echo Please specify what image to build
+  exit
+fi
+
+if [ ! -d $NAME ];  then
+  echo Directory $1 does not exist, can not create image
+fi
+
+DIR=`pwd`
+echo Processing dir $NAME 
+
+mkdir -p $DIR/disk.mnt
+umount $DIR/disk.mnt
+
+if [[ ! -f disk.img || $FORCE == 1 ]]; then 
+    dd if=/dev/zero of=disk.img bs=1000k count=128
+    mke2fs -F disk.img
+fi
+mount -o loop -t ext2 $DIR/disk.img $DIR/disk.mnt || exit 1
+
+rsync -H -a $1/. disk.mnt/.
+rsync -H -a -v INKT-installer/ disk.mnt/.
+echo Ramdisk image generated `date`  >>disk.mnt/etc/motd
+echo from `hostname`:$DIR >>disk.mnt/etc/motd
+
+umount $DIR/disk.mnt
+gzip -9 -cv disk.img > /usr/local/jumpstart/out/tftpboot/$NAME.gz
+#mount -o loop -t ext2 $DIR/disk.img $DIR/disk.mnt
+
+#mv disk.gz /tftpboot/${NAME}.gz
+#rmdir disk.mnt

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "*************** Starting JUMPSTART ***************"
+/etc/init.d/rcS
+
+echo lets go to rc 2
+/etc/init.d/rc 2
+
+echo jumpstart
+/jumpstart/jumpstart.pl
+
+umount /mnt
+echo switching to rc 6
+/etc/init.d/rc 6
+echo sleeping waiting for reboot
+sleep 60
+echo sleeping more 
+sleep 60
+echo we lose 
