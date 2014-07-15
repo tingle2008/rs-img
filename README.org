@@ -10,3 +10,8 @@ out put vmlinuz + initrd for jumpstart step 1 .
 * os image
 
 
+* mkinitrd
+
+   nothing but a README doc.
+
+

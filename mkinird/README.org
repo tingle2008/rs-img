@@ -1,4 +1,3 @@
-
 * mkinird
 
 A place for initrd image maker
