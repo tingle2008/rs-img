@@ -1,3 +1,21 @@
-* workflow:
+* 描述
 
- - 
+合并 RS-installer 和 image. 
+
+** centos63
+
+来自 ingcloud 的虚拟机(centos 6.3)
+
+#+begin_example
+
+[root@ing006079 ~]# uname -r
+2.6.32-279.el6.x86_64
+   
+#+end_example
+
+
+* 标题 2
+
+** 子标题 2
+
+
