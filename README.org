@@ -1,5 +1,4 @@
-rs-img
-======
+* desc
 
 image maker workshop. (include inst-image and os-image) . 
 
