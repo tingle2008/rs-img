@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rsync -auvz zc:r/rs-img/mkinird/centos63/2.6.32-279.el6.x86_64 .

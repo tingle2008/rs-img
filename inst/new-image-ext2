@@ -1,6 +1,27 @@
-#!/bin/sh 
+#!/bin/bash 
 
-cd /usr/local/jumpstart/images/inst
+# 注意：
+# 这里生产出来的 ext2 image file 需要内核打开 RamDisk 支持同时
+# Device Driver
+# ----->Block Device
+# ------->Default Ram Disk Size（kbytes）
+# 的值改为32768就好了否则引导内核的时候会报告
+# RAMDISK: incomplete write (6267 != 32768）
+# write error 
+# 进而照不到内存rootfs. 如果不能很容易调整这个参数那么需要使用
+# new-image-cpio
+# TODO: 把kernel 的 src.rpm 中修改参数，然后从新编译.
+
+inst_dir="/usr/local/jumpstart/images/inst"
+
+if [ ! -e $inst_dir ];  then
+  echo Directory $inst_dir does not exist, can not run this script
+  exit
+fi
+
+
+cd $inst_dir
+
 if [[ $# > 1 ]]; then
     if [[ $1 == "-f" ]]; then FORCE=1; shift; fi
 fi
@@ -15,6 +36,7 @@ fi
 
 if [ ! -d $NAME ];  then
   echo Directory $1 does not exist, can not create image
+  exit
 fi
 
 DIR=`pwd`
@@ -30,7 +52,7 @@ fi
 mount -o loop -t ext2 $DIR/disk.img $DIR/disk.mnt || exit 1
 
 rsync -H -a $1/. disk.mnt/.
-rsync -H -a -v INKT-installer/ disk.mnt/.
+rsync -H -a -v RS-installer/ disk.mnt/.
 echo Ramdisk image generated `date`  >>disk.mnt/etc/motd
 echo from `hostname`:$DIR >>disk.mnt/etc/motd
 

@@ -1,0 +1,50 @@
+#!/bin/bash 
+
+LC_ALL=C
+LANG=C
+export LC_ALL LANG
+
+inst_dir="/usr/local/jumpstart/images/inst"
+js_out_tftp="/usr/local/jumpstart/out/tftpboot"
+
+if [ ! -e $inst_dir ];  then
+  echo Directory $inst_dir does not exist, can not run this script
+  exit
+fi
+
+
+cd $inst_dir
+
+if [[ $# > 1 ]]; then
+    if [[ $1 == "-f" ]]; then FORCE=1; shift; fi
+fi
+
+NAME=$1
+NAME=`echo $1 | sed 's#/$##'`
+
+if [ "x$NAME" == "x" ]; then
+  echo Please specify what image to build
+  exit
+fi
+
+if [ ! -d $NAME ];  then
+  echo Directory $1 does not exist, can not create image
+  exit
+fi
+
+DIR=`pwd`
+echo Processing dir $NAME 
+
+
+mkdir -p $DIR/disk.mnt
+umount $DIR/disk.mnt
+
+rsync -H -a $1/. disk.mnt/.
+rsync -H -a -v RS-installer/ disk.mnt/.
+echo Ramdisk image generated `date`  >>disk.mnt/etc/motd
+echo from `hostname`:$DIR >>disk.mnt/etc/motd
+
+cd  $DIR/disk.mnt
+find . -print0 | cpio --null -R 0:0 -H newc  -o --quiet |gzip -9 > $js_out_tftp/$NAME.img
+
+cd -
