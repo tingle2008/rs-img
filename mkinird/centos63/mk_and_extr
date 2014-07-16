@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# run mkinitrd and extract it to a directory.
+# run under ing006079.
+
+test -d `uname -r` || mkdir `uname -r`
+
+dracut -v --force i1.img `uname -r`
+
+cd `uname -r`
+
+gunzip -c ../i1.img | cpio -div
+
+cd ..
+
+rm -rf i1.img
+
+
