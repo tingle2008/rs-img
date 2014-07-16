@@ -1,4 +1,4 @@
-* desc
+* Desc
 
 image maker workshop. (include inst-image and os-image) . 
 
