@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/local/bin/perl -w
 
 use strict;
 use lib "/jumpstart/lib";
@@ -28,13 +28,10 @@ my @js_steps = qw(
 
  check_integrity
  get_environ
- load_netmodules
+ !load_netmodules
  set_ip
- 
  optional_shell
- 
  ping_and_sleep
-
  run_installer
 );
 
@@ -216,6 +213,7 @@ sub get_environ {
 }
 
 sub set_ip {
+    #XXX:(yuting): if it has two ether interface. need 
     my($ip,$boothost,$gateway,$netmask) = split(/:/,$environ{ip});
     $environ{myip}=$ip;
     $environ{boothost}=$boothost;
@@ -227,6 +225,7 @@ sub set_ip {
     my $broadcast = $environ{broadcast}=$block->broadcast;
 
     display( "Setting IP address to $ip\n");
+    #XXX:(yuting): set eth0? or eth1 or set?
     run_local("/sbin/ifconfig", "eth0", "inet", $ip,
         "netmask",$netmask, "broadcast", $broadcast);
     run_local("/sbin/route", "add", "default", "gw", $gateway);
@@ -298,7 +297,10 @@ sub banner {
 }
 
 sub run_installer {
-    system('echo "GET /jumpstart/installer.cgi" | nc boothost 9999 >/INSTALL/installer.pl');
+    #XXX:(yuting): $environ{hostname} added
+    my $inst_query="GET /jumpstart/installer.cgi?hostname=$environ{hostname}";
+    system("echo $inst_query | nc boothost 9999 >/INSTALL/installer.pl");
+    # system('echo "GET /jumpstart/installer.cgi?hostname=$environ{hostname}" | nc boothost 9999 >/INSTALL/installer.pl');
     eval qq(require "/INSTALL/installer.pl");
     crapout($@) if $@;
 }
